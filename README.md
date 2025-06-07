@@ -36,51 +36,7 @@ A <strong>busca aleatória</strong>, por sua vez, utiliza distribuições estat�
 Para a realização desse tipo de busca, o módulo ``Optuna``, definido no modo aleatório ``(sampler=optuna.samplers.RandomSampler(seed=51012))``, foi utilizado, a partir do seguinte código:
 
 ````python
-
-from sklearn.model_selection import GridSearchCV
-
-
-class MyModule(nn.Module):
-    def __init__(self, num_units=10, nonlin=nn.ReLU(), num_layers=2):
-        super().__init__()
-        self.nonlin = nonlin
-
-        layers = []
-        input_size = 30  # número de features do X
-        for i in range(num_layers):
-            layers.append(nn.Linear(input_size, num_units))
-            layers.append(nonlin)
-            input_size = num_units  # as próximas camadas recebem `num_units`
-
-        self.hidden = nn.Sequential(*layers)
-        self.output = nn.Linear(num_units, QUANTIDADE_TARGET)
-
-    def forward(self, X, **kwargs):
-        X = self.hidden(X)
-        X = self.output(X)
-        return X
-    
-net = NeuralNetClassifier(
-    MyModule,
-    max_epochs=100,
-    criterion=nn.CrossEntropyLoss(),
-    lr=0.1,
-    # Shuffle training data on each epoch
-    iterator_train__shuffle=True,
-)
-    
-params = {
-    'lr': TAXA_APRENDIZADO,
-    'module__num_units': NEURONIOS,         # por exemplo [10, 20, 50]
-    'module__nonlin': [nn.ReLU(), nn.Sigmoid()],
-    'module__num_layers': [1, 2, 3, 4]       # experimenta diferentes profundidades
-}
-gs = GridSearchCV(net, params, refit=False, cv=3, scoring='accuracy')
-
-X_treino = X_treino.astype(np.float32) #?
-y_treino = y_treino.astype(np.int64)
-gs.fit(X_treino, y_treino)
-print(gs.best_score_, gs.best_params_)
+código de busca aleatória
 ````
 
 
@@ -149,52 +105,7 @@ Finalmente, em relação a essa forma de otimização, o modo clássico do módu
 </p>
 
 ````python
-
-from sklearn.model_selection import GridSearchCV
-
-
-class MyModule(nn.Module):
-    def __init__(self, num_units=10, nonlin=nn.ReLU(), num_layers=2):
-        super().__init__()
-        self.nonlin = nonlin
-
-        layers = []
-        input_size = 30  # número de features do X
-        for i in range(num_layers):
-            layers.append(nn.Linear(input_size, num_units))
-            layers.append(nonlin)
-            input_size = num_units  # as próximas camadas recebem `num_units`
-
-        self.hidden = nn.Sequential(*layers)
-        self.output = nn.Linear(num_units, QUANTIDADE_TARGET)
-
-    def forward(self, X, **kwargs):
-        X = self.hidden(X)
-        X = self.output(X)
-        return X
-    
-net = NeuralNetClassifier(
-    MyModule,
-    max_epochs=100,
-    criterion=nn.CrossEntropyLoss(),
-    lr=0.1,
-    # Shuffle training data on each epoch
-    iterator_train__shuffle=True,
-)
-    
-params = {
-    'lr': TAXA_APRENDIZADO,
-    'module__num_units': NEURONIOS,         # por exemplo [10, 20, 50]
-    'module__nonlin': [nn.ReLU(), nn.Sigmoid()],
-    'module__num_layers': [1, 2, 3, 4]       # experimenta diferentes profundidades
-}
-gs = GridSearchCV(net, params, refit=False, cv=3, scoring='accuracy')
-
-X_treino = X_treino.astype(np.float32) #?
-y_treino = y_treino.astype(np.int64)
-gs.fit(X_treino, y_treino)
-print(gs.best_score_, gs.best_params_)
-
+código de otimização bayesiana
 ````
 
 
