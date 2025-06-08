@@ -31,14 +31,89 @@ Esse repositório busca explorar essas três formas de otimização para a const
 **Busca aleatória**
 <p align="justify">
 A <strong>busca aleatória</strong>, por sua vez, utiliza distribuições estatísticas em vez de valores discretos para os parâmetros. Ao longo das iterações, os modelos são comparados com o objetivo de encontrar a melhor configuração. Nessa metodologia, não há garantia de que o melhor modelo será encontrado, mas, geralmente, ela retorna resultados comparáveis aos da busca em grade, com menor tempo de execução. [2]
-</p>
 
 Para a realização desse tipo de busca, o módulo ``Optuna``, definido no modo aleatório ``(sampler=optuna.samplers.RandomSampler(seed=51012))``, foi utilizado, a partir do seguinte código:
 
 ````python
-código de busca aleatória
-````
+#Criando a instância com os parâmetros necessários
+def cria_instancia_mlp(trial):
+     """Cria uma instância do modelo desejado (MLP)"""
+     n_camadas = trial.suggest_int('n_layers', 1, 10)
+     num_features = 30
+     camadas = [num_features]
+     for i in range(n_camadas):
+        camadas.append(trial.suggest_int(f'n_units_{i}', 2, 15))
+     camadas.append(5)
+     nome_ativacao = trial.suggest_categorical("funcao_de_ativacao", ["Relu", "Sigmoide"])
+     funcao_de_ativacao = nn.ReLU() if nome_ativacao == "Relu" else nn.Sigmoid()
+     camadas_rede = []
+     for i in range(len(camadas) - 2):
+        camadas_rede.append(nn.Linear(camadas[i], camadas[i+1]))
+        camadas_rede.append(funcao_de_ativacao)
+        p = trial.suggest_float("dropout_l{}".format(i), 0.2, 0.5)
+        camadas_rede.append(nn.Dropout(p))
+     camadas_rede.append(nn.Linear(camadas[-2], camadas[-1]))
+     camadas_rede.append(nn.LogSoftmax(dim=1))
 
+# Classe para construção da MLP com os parâmetros sorteados em cada época
+     
+     class MLP(nn.Module):   
+        def __init__(self):
+            super().__init__()
+            camadas_rede = []
+            for i in range(len(camadas) - 2):
+                camadas_rede.append(nn.Linear(camadas[i], camadas[i+1]))
+                camadas_rede.append(funcao_de_ativacao)
+            camadas_rede.append(nn.Linear(camadas[-2], camadas[-1]))
+            self.rede_neural = nn.Sequential(*camadas_rede)
+        def forward(self, X):
+            return self.rede_neural(X)
+
+     return NeuralNetClassifier(
+        MLP,
+        max_epochs=100,
+        lr=trial.suggest_float("learning_rate", 1e-5, 1e-2, log=True),
+        criterion=torch.nn.CrossEntropyLoss,
+        optimizer=torch.optim.Adam,
+    )         
+
+#Função objetivo para análise do desempenho da rede gerada, com aplicação da validação cruzada 
+def funcao_objetivo(trial, X, y, num_folds):
+    """Computa a Acurácia - com a utilização de validação cruzada - para teste a eficiência das instâncias geradas """
+    modelo = cria_instancia_mlp(trial)
+ 
+    metricas = cross_val_score(
+            modelo,
+            X,
+            y,
+            scoring="accuracy",
+            cv=num_folds,
+        )
+    return -metricas.mean()
+ 
+def funcao_objetivo_parcial(trial):
+    "Função objetivo que apenas possui como argumento o objeto trial"
+    return funcao_objetivo(trial, X_treino, y_treino, 3)
+ 
+    
+estudo_mlp= optuna.create_study(
+    sampler=optuna.samplers.RandomSampler(seed=51012),
+    direction="minimize",
+    study_name="mlp_otimizacao_optuna_busca_aleatoria_final",
+    storage=f"sqlite:///mlp_otimizacao_optuna_busca_aleatoria_final.db",
+    load_if_exists=True,
+    
+    )
+ 
+estudo_mlp.optimize(funcao_objetivo_parcial, n_trials=100)
+ 
+melhor_trial_mlp = estudo_mlp.best_trial
+ 
+    
+parametros_melhor_trial_mlp_aleatorio = melhor_trial_mlp.params
+print(f"Parâmetros do melhor trial: {parametros_melhor_trial_mlp_aleatorio}")
+````
+</p>
 
 **Busca em grade**
 <p align="justify">
@@ -105,7 +180,80 @@ Finalmente, em relação a essa forma de otimização, o modo clássico do módu
 </p>
 
 ````python
-código de otimização bayesiana
+#Criando a instância com os parâmetros necessários
+def cria_instancia_mlp(trial):
+     """Cria uma instância do modelo desejado (MLP)"""
+     n_camadas = trial.suggest_int('n_layers', 1, 10)
+     num_features = 30
+     camadas = [num_features]
+     for i in range(n_camadas):
+        camadas.append(trial.suggest_int(f'n_units_{i}', 2, 15))
+     camadas.append(5)
+     nome_ativacao = trial.suggest_categorical("funcao_de_ativacao", ["Relu", "Sigmoide"])
+     funcao_de_ativacao = nn.ReLU() if nome_ativacao == "Relu" else nn.Sigmoid()
+     camadas_rede = []
+     for i in range(len(camadas) - 2):
+        camadas_rede.append(nn.Linear(camadas[i], camadas[i+1]))
+        camadas_rede.append(funcao_de_ativacao)
+        p = trial.suggest_float("dropout_l{}".format(i), 0.2, 0.5)
+        camadas_rede.append(nn.Dropout(p))
+     camadas_rede.append(nn.Linear(camadas[-2], camadas[-1]))
+     camadas_rede.append(nn.LogSoftmax(dim=1))
+
+    # Classe para construção da MLP com os parâmetros sorteados em cada época
+     class MLP(nn.Module):
+        def __init__(self):
+            super().__init__()
+            camadas_rede = []
+            for i in range(len(camadas) - 2):
+                camadas_rede.append(nn.Linear(camadas[i], camadas[i+1]))
+                camadas_rede.append(funcao_de_ativacao)
+            camadas_rede.append(nn.Linear(camadas[-2], camadas[-1]))
+            self.rede_neural = nn.Sequential(*camadas_rede)
+        def forward(self, X):
+            return self.rede_neural(X)
+
+     return NeuralNetClassifier(
+        MLP,
+        max_epochs=100,
+        lr=trial.suggest_float("learning_rate", 1e-5, 1e-2, log=True),
+        criterion=torch.nn.CrossEntropyLoss,
+        optimizer=torch.optim.Adam,
+    )         
+
+#Função objetivo para análise do desempenho da rede gerada, com aplicação da validação cruzada  
+def funcao_objetivo(trial, X, y, num_folds):
+    """Computa o RMSE - com a utilização de validação cruzada - para teste a eficiência das instâncias geradas """
+    modelo = cria_instancia_mlp(trial)
+ 
+    metricas = cross_val_score(
+            modelo,
+            X,
+            y,
+            scoring="accuracy",
+            cv=num_folds,
+        )
+    return -metricas.mean()
+ 
+def funcao_objetivo_parcial(trial):
+    "Função objetivo que apenas possui como argumento o objeto trial"
+    return funcao_objetivo(trial, X_treino, y_treino, 3)
+ 
+    
+estudo_mlp= optuna.create_study(
+    direction="minimize",
+    study_name="mlp_otimizacao_optuna_busca_bayesiana_final",
+    storage=f"sqlite:///mlp_otimizacao_optuna_bayesiana_final.db",
+    load_if_exists=True,
+    )
+ 
+estudo_mlp.optimize(funcao_objetivo_parcial, n_trials=100)
+ 
+melhor_trial_mlp_bayesiano = estudo_mlp.best_trial
+ 
+    
+parametros_melhor_trial_mlp_bayesiano = melhor_trial_mlp_bayesiano.params
+print(f"Parâmetros do melhor trial: {parametros_melhor_trial_mlp_bayesiano}")
 ````
 
 
