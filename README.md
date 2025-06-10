@@ -32,142 +32,19 @@ Esse repositório busca explorar essas três formas de otimização para a const
 <p align="justify">
 A <strong>busca aleatória</strong>, por sua vez, utiliza distribuições estatísticas em vez de valores discretos para os parâmetros. Ao longo das iterações, os modelos são comparados com o objetivo de encontrar a melhor configuração. Nessa metodologia, não há garantia de que o melhor modelo será encontrado, mas, geralmente, ela retorna resultados comparáveis aos da busca em grade, com menor tempo de execução. [2]
 
-Para a realização desse tipo de busca, o módulo ``Optuna``, definido no modo aleatório ``(sampler=optuna.samplers.RandomSampler(seed=51012))``, foi utilizado, a partir do seguinte código:
+Para a realização desse tipo de busca, o módulo ``Optuna``, definido no modo aleatório ``(sampler=optuna.samplers.RandomSampler(seed=51012))``, foi implementado. A partir do resultado da melhor arquitetura, essa foi testada para a rede MLP, em que dentre as análises foi apresentada a seguinte matriz de confusão:
 
-````python
-#Criando a instância com os parâmetros necessários
-def cria_instancia_mlp(trial):
-     """Cria uma instância do modelo desejado (MLP)"""
-     n_camadas = trial.suggest_int('n_layers', 1, 10)
-     num_features = 30
-     camadas = [num_features]
-     for i in range(n_camadas):
-        camadas.append(trial.suggest_int(f'n_units_{i}', 2, 15))
-     camadas.append(5)
-     nome_ativacao = trial.suggest_categorical("funcao_de_ativacao", ["Relu", "Sigmoide"])
-     funcao_de_ativacao = nn.ReLU() if nome_ativacao == "Relu" else nn.Sigmoid()
-     camadas_rede = []
-     for i in range(len(camadas) - 2):
-        camadas_rede.append(nn.Linear(camadas[i], camadas[i+1]))
-        camadas_rede.append(funcao_de_ativacao)
-        p = trial.suggest_float("dropout_l{}".format(i), 0.2, 0.5)
-        camadas_rede.append(nn.Dropout(p))
-     camadas_rede.append(nn.Linear(camadas[-2], camadas[-1]))
-     camadas_rede.append(nn.LogSoftmax(dim=1))
+![image](https://github.com/user-attachments/assets/f100eb94-d1b2-48d3-95d8-cb9172f67e23)
 
-# Classe para construção da MLP com os parâmetros sorteados em cada época
-     
-     class MLP(nn.Module):   
-        def __init__(self):
-            super().__init__()
-            camadas_rede = []
-            for i in range(len(camadas) - 2):
-                camadas_rede.append(nn.Linear(camadas[i], camadas[i+1]))
-                camadas_rede.append(funcao_de_ativacao)
-            camadas_rede.append(nn.Linear(camadas[-2], camadas[-1]))
-            self.rede_neural = nn.Sequential(*camadas_rede)
-        def forward(self, X):
-            return self.rede_neural(X)
-
-     return NeuralNetClassifier(
-        MLP,
-        max_epochs=100,
-        lr=trial.suggest_float("learning_rate", 1e-5, 1e-2, log=True),
-        criterion=torch.nn.CrossEntropyLoss,
-        optimizer=torch.optim.Adam,
-    )         
-
-#Função objetivo para análise do desempenho da rede gerada, com aplicação da validação cruzada 
-def funcao_objetivo(trial, X, y, num_folds):
-    """Computa a Acurácia - com a utilização de validação cruzada - para teste a eficiência das instâncias geradas """
-    modelo = cria_instancia_mlp(trial)
- 
-    metricas = cross_val_score(
-            modelo,
-            X,
-            y,
-            scoring="accuracy",
-            cv=num_folds,
-        )
-    return -metricas.mean()
- 
-def funcao_objetivo_parcial(trial):
-    "Função objetivo que apenas possui como argumento o objeto trial"
-    return funcao_objetivo(trial, X_treino, y_treino, 3)
- 
-    
-estudo_mlp= optuna.create_study(
-    sampler=optuna.samplers.RandomSampler(seed=51012),
-    direction="minimize",
-    study_name="mlp_otimizacao_optuna_busca_aleatoria_final",
-    storage=f"sqlite:///mlp_otimizacao_optuna_busca_aleatoria_final.db",
-    load_if_exists=True,
-    
-    )
- 
-estudo_mlp.optimize(funcao_objetivo_parcial, n_trials=100)
- 
-melhor_trial_mlp = estudo_mlp.best_trial
- 
-    
-parametros_melhor_trial_mlp_aleatorio = melhor_trial_mlp.params
-print(f"Parâmetros do melhor trial: {parametros_melhor_trial_mlp_aleatorio}")
-````
 </p>
 
 **Busca em grade**
 <p align="justify">
 A <strong>busca em grade</strong> é uma metodologia para o ajuste de hiperparâmetros que consiste em explorar exaustivamente o espaço com todos os conjuntos possíveis de hiperparâmetros. Com isso, o objetivo é encontrar o melhor conjunto dessas variáveis para o modelo. Contudo, ao gerar todas as configurações possíveis de valores discretos, há um alto consumo de recursos computacionais e, desse modo, essa abordagem mostra-se ineficiente para lidar com a maioria dos problemas. [2]
 
-Para a definição desse tipo de busca, o módulo `GridSearchCV` da biblioteca ``Scikit-Learn`` foi utilizado, seguindo o pipeline abaixo:
+Para a definição desse tipo de busca, o módulo `GridSearchCV` da biblioteca ``Scikit-Learn`` foi utilizado. A partir da arquitetura com melhor desempenho encontrado, essa foi aplicada posteriormente na rede, avaliando sua acurácia, e gerando a matriz de confusão desse modelo:
 
-````python
-
-from sklearn.model_selection import GridSearchCV
-
-
-class MyModule(nn.Module):
-    def __init__(self, num_units=10, nonlin=nn.ReLU(), num_layers=2):
-        super().__init__()
-        self.nonlin = nonlin
-
-        layers = []
-        input_size = 30  # número de features do X
-        for i in range(num_layers):
-            layers.append(nn.Linear(input_size, num_units))
-            layers.append(nonlin)
-            input_size = num_units  # as próximas camadas recebem `num_units`
-
-        self.hidden = nn.Sequential(*layers)
-        self.output = nn.Linear(num_units, QUANTIDADE_TARGET)
-
-    def forward(self, X, **kwargs):
-        X = self.hidden(X)
-        X = self.output(X)
-        return X
-    
-net = NeuralNetClassifier(
-    MyModule,
-    max_epochs=100,
-    criterion=nn.CrossEntropyLoss(),
-    lr=0.1,
-    # Shuffle training data on each epoch
-    iterator_train__shuffle=True,
-)
-    
-params = {
-    'lr': TAXA_APRENDIZADO,
-    'module__num_units': NEURONIOS,         # por exemplo [10, 20, 50]
-    'module__nonlin': [nn.ReLU(), nn.Sigmoid()],
-    'module__num_layers': [1, 2, 3, 4]       # experimenta diferentes profundidades
-}
-gs = GridSearchCV(net, params, refit=False, cv=3, scoring='accuracy')
-
-X_treino = X_treino.astype(np.float32) #?
-y_treino = y_treino.astype(np.int64)
-gs.fit(X_treino, y_treino)
-print(gs.best_score_, gs.best_params_)
-````
+![image](https://github.com/user-attachments/assets/e857ecdc-6cbd-4ea2-b630-81491dcb99bd)
 
 </p>
 
@@ -176,7 +53,7 @@ print(gs.best_score_, gs.best_params_)
 Em relação ao <strong>Optuna</strong>, esse algoritmo utiliza o princípio do Teorema de Bayes para encontrar os hiperparâmetros. Ou seja, o processo é iterativo, sendo que o próximo palpite para a combinação de variáveis depende da anterior. A partir disso, são selecionados de forma probabilística um novo conjunto de valores de hiperparâmetros com maior probabilidade de gerar melhores resultados. 
 </p>
 
-Finalmente, em relação a essa forma de otimização, o modo clássico do módulo ``Optuna`` foi utilizado:
+Finalmente, em relação a essa forma de otimização, o modo clássico do módulo ``Optuna`` foi utilizado. Gerando a melhor arquitetura de rede encontrada, que foi testada na MLP classificadora, resultando na matriz de confusão apresentada a seguir:
 </p>
 
 ![image](https://github.com/user-attachments/assets/ba9da3be-ec97-4f31-a251-2703c011fb9d)
