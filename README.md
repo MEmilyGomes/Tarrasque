@@ -259,6 +259,10 @@ print(f"Parâmetros do melhor trial: {parametros_melhor_trial_mlp_bayesiano}")
 
 ## 😁 Conclusão
 
+<p align="justify">
+Ao final do projeto, foi possível otimizar os parâmetros de uma rede MLP classificadora multiclasse, a qual visava a previsão da severidade de enfisemas pulmonares em pacientes com HIV. A partir dos três métodos de otimização apicados, foi possível obter três conjuntos de hiperparâmetros. Vale ressaltar que os hiperparâmetros dos métodos de busca em grade e busca bayesiana foram definidos dentro de um intervalo possível, enquanto a busca em grade foi feita com valores de hiperparâmetros definidos de forma discreta e sem dropout, sendo que, mesmo assim, a busca em grade apresentou o melhor resultado. A partir do treinamento e teste das redes MLP com cada uma das combinações de parâmetros, obteve-se diferentes valores de acurácia, sendo os dois menores valores de 35.29% com a busca aleatória e bayesiana. Quanto ao melhor resultado, foi a acurácia de 47%, com a busca em grade, tendo uma matriz de confusão com mais valores na diagonal principal.  Apesar dos valores iguais entre a acurácia do modelo Bayesiano e de Busca aleatória, as matrizes de confusão foram diferentes o que demonstra modelos diferentes em suas predições. Assim, como a busca em grade apresenta um maior custo computacional a aplicação da ferramenta de parada antecipada auxilixa na reudção desse problema. Portanto, a acurácia próxima ao baseline, pode ter ocorrido devido ao desbalanceamento das classes. Desse modo, foi possível testar métodos diferentes de otimizadores e avaliar o desempenho de cada um deles para a predição desse modelo.
+</p>
+
 ## 🖇️ Informações técnicas
 * Linguagem de programação: `Python 3.9`
 * Software:  `Jupyter Notebook`
@@ -283,8 +287,8 @@ print(f"Parâmetros do melhor trial: {parametros_melhor_trial_mlp_bayesiano}")
  ## 🧠 Contribuições dos Colaboradores
 | GitHub | Contribuições |
 |:-----|:--------------|
-| [Júlia Guedes A. dos Santos](https://github.com/JuliaGuedesASantos) | Introdução, otimização de modelos (bayesiano e busca aleatória), treinamento final dos modelos e READ ME |
-| [Lorena Ribeiro Nascimento](https://github.com/lorena881) | Introdução, otimização de modelos (bayesiano e busca aleatória), comentários no código | (https://github.com/MEmilyGomes)
+| [Júlia Guedes A. dos Santos](https://github.com/JuliaGuedesASantos) | Introdução, otimização de modelos (bayesiano e busca aleatória), treinamento final dos modelos, comentários no código e READ ME |
+| [Lorena Ribeiro Nascimento](https://github.com/lorena881) | Introdução, otimização de modelos (bayesiano e busca aleatória), comentários no código, READ ME | (https://github.com/MEmilyGomes)
 | [Maria Emily Nayla Gomes da Silva](https://github.com/lorena881) | Introdução, otimização de modelos (busca em grade), READ ME e comentários no código |
 | [Daniel Roberto Cassar](https://github.com/drcassar) | Orientador |
  
