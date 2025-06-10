@@ -30,18 +30,21 @@ Esse repositório busca explorar essas três formas de otimização para a const
 ## 🪼 Métodos para a busca de hiperparâmetros
 **Busca aleatória**
 <p align="justify">
-A <strong>busca aleatória</strong>, por sua vez, utiliza distribuições estatísticas em vez de valores discretos para os parâmetros. Ao longo das iterações, os modelos são comparados com o objetivo de encontrar a melhor configuração. Nessa metodologia, não há garantia de que o melhor modelo será encontrado, mas, geralmente, ela retorna resultados comparáveis aos da busca em grade, com menor tempo de execução. [2]
+A <strong>busca aleatória</strong>, por sua vez, utiliza distribuições estatísticas em vez de valores discretos para os parâmetros. Ao longo das iterações, os modelos são comparados com o objetivo de encontrar a melhor configuração. Nessa metodologia, não há garantia de que o melhor modelo será encontrado, mas, geralmente, ela retorna resultados comparáveis aos da busca em grade, com menor tempo de execução. [2]</p>
+  
+<p align="justify">
+Para a realização desse tipo de busca, o módulo ``Optuna``, definido no modo aleatório ``(sampler=optuna.samplers.RandomSampler(seed=51012))``, foi implementado. A partir do resultado da melhor arquitetura, essa foi testada para a rede MLP, em que dentre as análises foi apresentada a seguinte matriz de confusão:</p>
 
-Para a realização desse tipo de busca, o módulo ``Optuna``, definido no modo aleatório ``(sampler=optuna.samplers.RandomSampler(seed=51012))``, foi implementado. A partir do resultado da melhor arquitetura, essa foi testada para a rede MLP, em que dentre as análises foi apresentada a seguinte matriz de confusão:
-
-![image](https://github.com/user-attachments/assets/f100eb94-d1b2-48d3-95d8-cb9172f67e23)
-
+<p align="justify">
+  <img src="https://github.com/user-attachments/assets/f100eb94-d1b2-48d3-95d8-cb9172f67e23" alt="image" style="display: block; margin: auto; text-align: justify;">
 </p>
+
 
 **Busca em grade**
 <p align="justify">
 A <strong>busca em grade</strong> é uma metodologia para o ajuste de hiperparâmetros que consiste em explorar exaustivamente o espaço com todos os conjuntos possíveis de hiperparâmetros. Com isso, o objetivo é encontrar o melhor conjunto dessas variáveis para o modelo. Contudo, ao gerar todas as configurações possíveis de valores discretos, há um alto consumo de recursos computacionais e, desse modo, essa abordagem mostra-se ineficiente para lidar com a maioria dos problemas. [2]
 
+<p align="justify">
 Para a definição desse tipo de busca, o módulo `GridSearchCV` da biblioteca ``Scikit-Learn`` foi utilizado. A partir da arquitetura com melhor desempenho encontrado, essa foi aplicada posteriormente na rede, avaliando sua acurácia, e gerando a matriz de confusão desse modelo:
 
 ![image](https://github.com/user-attachments/assets/e857ecdc-6cbd-4ea2-b630-81491dcb99bd)
@@ -53,6 +56,7 @@ Para a definição desse tipo de busca, o módulo `GridSearchCV` da biblioteca `
 Em relação ao <strong>Optuna</strong>, esse algoritmo utiliza o princípio do Teorema de Bayes para encontrar os hiperparâmetros. Ou seja, o processo é iterativo, sendo que o próximo palpite para a combinação de variáveis depende da anterior. A partir disso, são selecionados de forma probabilística um novo conjunto de valores de hiperparâmetros com maior probabilidade de gerar melhores resultados. 
 </p>
 
+<p align="justify">
 Finalmente, em relação a essa forma de otimização, o modo clássico do módulo ``Optuna`` foi utilizado. Gerando a melhor arquitetura de rede encontrada, que foi testada na MLP classificadora, resultando na matriz de confusão apresentada a seguir:
 </p>
 
