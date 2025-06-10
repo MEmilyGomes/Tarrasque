@@ -179,88 +179,13 @@ Em relação ao <strong>Optuna</strong>, esse algoritmo utiliza o princípio do 
 Finalmente, em relação a essa forma de otimização, o modo clássico do módulo ``Optuna`` foi utilizado:
 </p>
 
-````python
-#Criando a instância com os parâmetros necessários
-def cria_instancia_mlp(trial):
-     """Cria uma instância do modelo desejado (MLP)"""
-     n_camadas = trial.suggest_int('n_layers', 1, 10)
-     num_features = 30
-     camadas = [num_features]
-     for i in range(n_camadas):
-        camadas.append(trial.suggest_int(f'n_units_{i}', 2, 15))
-     camadas.append(5)
-     nome_ativacao = trial.suggest_categorical("funcao_de_ativacao", ["Relu", "Sigmoide"])
-     funcao_de_ativacao = nn.ReLU() if nome_ativacao == "Relu" else nn.Sigmoid()
-     camadas_rede = []
-     for i in range(len(camadas) - 2):
-        camadas_rede.append(nn.Linear(camadas[i], camadas[i+1]))
-        camadas_rede.append(funcao_de_ativacao)
-        p = trial.suggest_float("dropout_l{}".format(i), 0.2, 0.5)
-        camadas_rede.append(nn.Dropout(p))
-     camadas_rede.append(nn.Linear(camadas[-2], camadas[-1]))
-     camadas_rede.append(nn.LogSoftmax(dim=1))
-
-    # Classe para construção da MLP com os parâmetros sorteados em cada época
-     class MLP(nn.Module):
-        def __init__(self):
-            super().__init__()
-            camadas_rede = []
-            for i in range(len(camadas) - 2):
-                camadas_rede.append(nn.Linear(camadas[i], camadas[i+1]))
-                camadas_rede.append(funcao_de_ativacao)
-            camadas_rede.append(nn.Linear(camadas[-2], camadas[-1]))
-            self.rede_neural = nn.Sequential(*camadas_rede)
-        def forward(self, X):
-            return self.rede_neural(X)
-
-     return NeuralNetClassifier(
-        MLP,
-        max_epochs=100,
-        lr=trial.suggest_float("learning_rate", 1e-5, 1e-2, log=True),
-        criterion=torch.nn.CrossEntropyLoss,
-        optimizer=torch.optim.Adam,
-    )         
-
-#Função objetivo para análise do desempenho da rede gerada, com aplicação da validação cruzada  
-def funcao_objetivo(trial, X, y, num_folds):
-    """Computa o RMSE - com a utilização de validação cruzada - para teste a eficiência das instâncias geradas """
-    modelo = cria_instancia_mlp(trial)
- 
-    metricas = cross_val_score(
-            modelo,
-            X,
-            y,
-            scoring="accuracy",
-            cv=num_folds,
-        )
-    return -metricas.mean()
- 
-def funcao_objetivo_parcial(trial):
-    "Função objetivo que apenas possui como argumento o objeto trial"
-    return funcao_objetivo(trial, X_treino, y_treino, 3)
- 
-    
-estudo_mlp= optuna.create_study(
-    direction="minimize",
-    study_name="mlp_otimizacao_optuna_busca_bayesiana_final",
-    storage=f"sqlite:///mlp_otimizacao_optuna_bayesiana_final.db",
-    load_if_exists=True,
-    )
- 
-estudo_mlp.optimize(funcao_objetivo_parcial, n_trials=100)
- 
-melhor_trial_mlp_bayesiano = estudo_mlp.best_trial
- 
-    
-parametros_melhor_trial_mlp_bayesiano = melhor_trial_mlp_bayesiano.params
-print(f"Parâmetros do melhor trial: {parametros_melhor_trial_mlp_bayesiano}")
-````
+![image](https://github.com/user-attachments/assets/ba9da3be-ec97-4f31-a251-2703c011fb9d)
 
 
 ## 😁 Conclusão
 
 <p align="justify">
-Ao final do projeto, foi possível otimizar os parâmetros de uma rede MLP classificadora multiclasse, a qual visava a previsão da severidade de enfisemas pulmonares em pacientes com HIV. A partir dos três métodos de otimização apicados, foi possível obter três conjuntos de hiperparâmetros. Vale ressaltar que os hiperparâmetros dos métodos de busca em grade e busca bayesiana foram definidos dentro de um intervalo possível, enquanto a busca em grade foi feita com valores de hiperparâmetros definidos de forma discreta e sem dropout, sendo que, mesmo assim, a busca em grade apresentou o melhor resultado. A partir do treinamento e teste das redes MLP com cada uma das combinações de parâmetros, obteve-se diferentes valores de acurácia, sendo os dois menores valores de 35.29% com a busca aleatória e bayesiana. Quanto ao melhor resultado, foi a acurácia de 47%, com a busca em grade, tendo uma matriz de confusão com mais valores na diagonal principal.  Apesar dos valores iguais entre a acurácia do modelo Bayesiano e de Busca aleatória, as matrizes de confusão foram diferentes o que demonstra modelos diferentes em suas predições. Assim, como a busca em grade apresenta um maior custo computacional a aplicação da ferramenta de parada antecipada auxilixa na reudção desse problema. Portanto, a acurácia próxima ao baseline, pode ter ocorrido devido ao desbalanceamento das classes. Desse modo, foi possível testar métodos diferentes de otimizadores e avaliar o desempenho de cada um deles para a predição desse modelo.
+Ao final do projeto, foi possível otimizar os parâmetros de uma rede MLP classificadora multiclasse, a qual visava a previsão da severidade de enfisemas pulmonares em pacientes com HIV. A partir dos três métodos de otimização apicados, foi possível obter três conjuntos de hiperparâmetros. Vale ressaltar que os hiperparâmetros dos métodos de busca em grade e busca bayesiana foram definidos dentro de um intervalo possível, enquanto a busca em grade foi feita com valores de hiperparâmetros definidos de forma discreta e sem dropout, sendo que, mesmo assim, a busca em grade apresentou o melhor resultado. A partir do treinamento e teste das redes MLP com cada uma das combinações de parâmetros, obteve-se diferentes valores de acurácia, sendo os dois maiores valores de 41.18% com a busca aleatória e bayesiana. Quanto ao menor resultado, foi a acurácia de 35.29%, com a busca em grade. Quanto a matriz de confusão tanto a busca em grade, quanto busca aleatória apresentam apenas dois valores na diagonal principal, enquanto a busca bayesiana apresenta três. Vale ressaltar também que em todas, a predições mais fidedignas foram em relação a classe 0, que apresenta maior frequência de dados. Apesar dos valores iguais entre a acurácia do modelo Bayesiano e de Busca aleatória, as matrizes de confusão foram diferentes o que demonstra modelos diferentes em suas predições. Além disso,a aplicação da ferramenta de parada antecipada é uma ferramenta que auxilixa na redução do custo computacional. Portanto, a acurácia próxima ao baseline, pode ter ocorrido devido ao desbalanceamento das classes. Desse modo, foi possível testar métodos diferentes de otimizadores e avaliar o desempenho de cada um deles para a predição desse modelo.
 </p>
 
 ## 🖇️ Informações técnicas
