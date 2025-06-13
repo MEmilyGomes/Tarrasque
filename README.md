@@ -10,9 +10,6 @@
 
 <h4 align="center"><strong>Professor:</strong> Daniel R. Cassar</h4>
 
-<p align="center">
-<img loading="lazy" src="http://img.shields.io/static/v1?label=STATUS&message=EM%20DESENVOLVIMENTO&color=GREEN&style=for-the-badge"/>
-</p>
 
 ## 📝 Descrição
 <p align="justify"> 
@@ -24,7 +21,7 @@ Esse repositório busca explorar essas três formas de otimização para a const
 </p>
 
 ## 📔 Notebooks e arquivos do projeto
-* `ATP -5.1 Tiamat.ipynb`: Notebook principal que implementa os códigos de otimizações com as diferentes técnicas, bem como aprofunda os conceitos teóricos envolvidos e analisa os resultados obtidos por cada tipo de otimização.
+* `Tarrasque.zip`: Notebook principal que implementa os códigos de otimizações com as diferentes técnicas, bem como aprofunda os conceitos teóricos envolvidos e analisa os resultados obtidos por cada tipo de otimização.
 * `imagens`: Contém a logo utilizada no Notebook principal e no READ ME do Github ("logo_ilum-CNPEM.png")
 
 ## 🪼 Métodos para a busca de hiperparâmetros
